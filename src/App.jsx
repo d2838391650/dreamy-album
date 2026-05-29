@@ -7,9 +7,10 @@ import { getLayout, LAYOUT_NAMES } from './layouts';
 import './App.css';
 
 const PHOTO_COUNT = 39;
+const BASE = import.meta.env.BASE_URL || '/';
 const photoUrls = Array.from(
   { length: PHOTO_COUNT },
-  (_, i) => `/dreamy-album/photos/照片_${String(i).padStart(3, '0')}.jpg`
+  (_, i) => `${BASE}photos/照片_${String(i).padStart(3, '0')}.jpg`
 );
 
 // ─── 3D Card ────────────────────────────────────────────────────────────────
