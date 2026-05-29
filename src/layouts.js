@@ -2,39 +2,29 @@
 // Each layout returns an array of { position: [x, y, z], rotation: [rx, ry, rz] }
 
 const LAYOUTS = {
-  // Cross/Plus formation
-  cross: (count) => {
+  // Hexagonal/Honeycomb formation — no overlapping
+  honeycomb: (count) => {
     const items = [];
-    const spacing = 2.8;
-    // Horizontal bar
-    const hCount = Math.min(count, 7);
-    for (let i = 0; i < hCount; i++) {
-      items.push({
-        position: [(i - (hCount - 1) / 2) * spacing, 0, 0],
-        rotation: [0, 0, 0],
-      });
-    }
-    // Vertical bar — offset z slightly to avoid overlap with horizontal center
-    const vCount = Math.min(count - hCount, 5);
-    for (let i = 0; i < vCount; i++) {
-      const idx = hCount + i;
-      if (idx >= count) break;
-      const y = (i - (vCount - 1) / 2) * spacing;
-      // Push vertical cards slightly forward so they don't z-fight with horizontal
-      const zOffset = y === 0 ? 0.5 : 0;
-      items.push({
-        position: [0, y, zOffset],
-        rotation: [0, 0, 0],
-      });
-    }
-    // Remaining cards — arranged in a ring behind, no random rotation
-    for (let i = hCount + vCount; i < count; i++) {
-      const angle = ((i - hCount - vCount) / Math.max(count - hCount - vCount, 1)) * Math.PI * 2;
-      const r = 5;
-      items.push({
-        position: [Math.cos(angle) * r, Math.sin(angle) * r, -3],
-        rotation: [0, 0, 0],
-      });
+    const spacingX = 3;
+    const spacingY = 2.6;
+    // Fill hex grid row by row
+    let placed = 0;
+    let row = 0;
+    while (placed < count) {
+      const cols = row % 2 === 0 ? 6 : 5;
+      const offsetX = row % 2 === 0 ? 0 : spacingX * 0.5;
+      for (let col = 0; col < cols && placed < count; col++) {
+        items.push({
+          position: [
+            (col - (cols - 1) / 2) * spacingX + offsetX,
+            (row - 2) * spacingY,
+            Math.sin(placed * 0.5) * 0.3,
+          ],
+          rotation: [0, 0, 0],
+        });
+        placed++;
+      }
+      row++;
     }
     return items;
   },
@@ -51,7 +41,6 @@ const LAYOUTS = {
           Math.sin(angle) * radius * 0.6,
           Math.sin(angle) * 1.5,
         ],
-        // Cards face outward slightly but mostly forward
         rotation: [0, -angle * 0.15, 0],
       });
     }
@@ -72,19 +61,18 @@ const LAYOUTS = {
           y,
           Math.sin(angle) * radius * 0.4,
         ],
-        // Gentle rotation, always mostly facing camera
         rotation: [0, -angle * 0.1, 0],
       });
     }
     return items;
   },
 
-  // Scattered/Explosion formation — all cards face camera
+  // Scattered/Explosion formation
   scattered: (count) => {
     const items = [];
     for (let i = 0; i < count; i++) {
       const phi = Math.acos(2 * ((i + 0.5) / count) - 1);
-      const theta = (1 + Math.sqrt(5)) * i; // golden angle for even distribution
+      const theta = (1 + Math.sqrt(5)) * i;
       const r = 5 + (i / count) * 7;
       items.push({
         position: [
@@ -92,7 +80,6 @@ const LAYOUTS = {
           r * Math.sin(phi) * Math.sin(theta) * 0.5,
           r * Math.cos(phi) * 0.4,
         ],
-        // All cards face forward, slight tilt only
         rotation: [
           Math.sin(i) * 0.1,
           Math.cos(i) * 0.15,
@@ -139,7 +126,6 @@ const LAYOUTS = {
           y,
           Math.sin(angle) * 2.5,
         ],
-        // Gentle tilt, always facing forward
         rotation: [0, -angle * 0.08, side * 0.08],
       });
     }
@@ -152,7 +138,6 @@ export const LAYOUT_NAMES = Object.keys(LAYOUTS);
 export function getLayout(name, count) {
   const fn = LAYOUTS[name] || LAYOUTS.circle;
   const items = fn(count);
-  // Pad or trim to exact count
   while (items.length < count) {
     const angle = (items.length / count) * Math.PI * 2;
     items.push({
