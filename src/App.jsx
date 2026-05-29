@@ -16,33 +16,31 @@ const photoUrls = Array.from(
 // ─── 3D Card Component ──────────────────────────────────────────────────────
 function Card3D({ url, index, targetPos, targetRot, isFocused, onSelect, onDoubleClick }) {
   const groupRef = useRef();
+  const glowRef = useRef();
   const [hovered, setHovered] = useState(false);
   const texture = useTexture(url);
 
-  // Animate position and rotation with GSAP
   useEffect(() => {
     if (!groupRef.current) return;
     gsap.to(groupRef.current.position, {
-      x: targetPos[0],
-      y: targetPos[1],
-      z: targetPos[2],
-      duration: 1.8,
-      ease: 'power3.inOut',
+      x: targetPos[0], y: targetPos[1], z: targetPos[2],
+      duration: 1.8, ease: 'power3.inOut',
     });
     gsap.to(groupRef.current.rotation, {
-      x: targetRot[0],
-      y: targetRot[1],
-      z: targetRot[2],
-      duration: 1.8,
-      ease: 'power3.inOut',
+      x: targetRot[0], y: targetRot[1], z: targetRot[2],
+      duration: 1.8, ease: 'power3.inOut',
     });
   }, [targetPos, targetRot]);
 
-  // Hover and focus animation
   useFrame((_, delta) => {
     if (!groupRef.current) return;
     const s = isFocused ? 1.5 : hovered ? 1.08 : 1.0;
     groupRef.current.scale.lerp(new THREE.Vector3(s, s, s), delta * 5);
+    if (glowRef.current) {
+      glowRef.current.opacity = THREE.MathUtils.lerp(
+        glowRef.current.opacity, hovered ? 0.3 : 0, delta * 5
+      );
+    }
     if (hovered && !isFocused) {
       groupRef.current.position.y += Math.sin(Date.now() * 0.003) * 0.001;
     }
@@ -58,9 +56,20 @@ function Card3D({ url, index, targetPos, targetRot, isFocused, onSelect, onDoubl
       onPointerEnter={(e) => { e.stopPropagation(); setHovered(true); document.body.style.cursor = 'pointer'; }}
       onPointerLeave={() => { setHovered(false); document.body.style.cursor = 'default'; }}
     >
+      {/* Photo */}
       <mesh>
         <planeGeometry args={[2.4, 3.2]} />
-        <meshStandardMaterial map={texture} roughness={0.3} metalness={0.05} />
+        <meshStandardMaterial map={texture} roughness={0.25} metalness={0.05} side={THREE.DoubleSide} />
+      </mesh>
+      {/* Glow border */}
+      <mesh position={[0, 0, -0.03]}>
+        <planeGeometry args={[2.6, 3.4]} />
+        <meshBasicMaterial ref={glowRef} color="#ff88cc" transparent opacity={0} side={THREE.DoubleSide} />
+      </mesh>
+      {/* Shadow */}
+      <mesh position={[0.05, -0.05, -0.05]}>
+        <planeGeometry args={[2.4, 3.2]} />
+        <meshBasicMaterial color="#000000" transparent opacity={0.3} />
       </mesh>
     </group>
   );
@@ -69,10 +78,9 @@ function Card3D({ url, index, targetPos, targetRot, isFocused, onSelect, onDoubl
 // ─── Floating Particles ─────────────────────────────────────────────────────
 function Particles({ count = 250 }) {
   const points = useRef();
-  const [positions, colors, sizes] = useMemo(() => {
+  const [positions, colors] = useMemo(() => {
     const pos = new Float32Array(count * 3);
     const col = new Float32Array(count * 3);
-    const sz = new Float32Array(count);
     for (let i = 0; i < count; i++) {
       pos[i * 3] = (Math.random() - 0.5) * 50;
       pos[i * 3 + 1] = (Math.random() - 0.5) * 35;
@@ -87,9 +95,8 @@ function Particles({ count = 250 }) {
       } else {
         col[i * 3] = 1; col[i * 3 + 1] = 1; col[i * 3 + 2] = 1;
       }
-      sz[i] = 0.04 + Math.random() * 0.08;
     }
-    return [pos, col, sz];
+    return [pos, col];
   }, [count]);
 
   useFrame((state) => {
@@ -124,7 +131,7 @@ function Particles({ count = 250 }) {
   );
 }
 
-// ─── Sparkle Ring (around title area in 3D) ─────────────────────────────────
+// ─── Sparkle Ring ───────────────────────────────────────────────────────────
 function SparkleRing() {
   const ref = useRef();
   const count = 60;
@@ -193,16 +200,14 @@ function DragRotate({ dragRef, children }) {
       const totalDx = e.clientX - startMouse.current.x;
       const totalDy = e.clientY - startMouse.current.y;
 
-      // Mark as drag if moved more than 5px
       if (Math.abs(totalDx) > 5 || Math.abs(totalDy) > 5) {
         didMove.current = true;
       }
 
       lastMouse.current = { x: e.clientX, y: e.clientY };
-
       targetRotation.current.y += dx * 0.005;
       targetRotation.current.x += dy * 0.003;
-
+      targetRotation.current.x = Math.max(-0.6, Math.min(0.6, targetRotation.current.x));
       velocity.current = { x: dy * 0.003, y: dx * 0.005 };
     };
 
@@ -214,7 +219,6 @@ function DragRotate({ dragRef, children }) {
     window.addEventListener('pointermove', onPointerMove);
     window.addEventListener('pointerup', onPointerUp);
 
-    // Expose drag state and group rotation for camera tracking
     if (dragRef) {
       dragRef.current = {
         isDragging: () => didMove.current,
@@ -232,20 +236,16 @@ function DragRotate({ dragRef, children }) {
   useFrame((_, delta) => {
     if (!groupRef.current) return;
 
-    // Apply inertia when not dragging
     if (!isDragging.current) {
       targetRotation.current.y += velocity.current.y;
       targetRotation.current.x += velocity.current.x;
-
-      // Decay velocity
+      targetRotation.current.x = Math.max(-0.6, Math.min(0.6, targetRotation.current.x));
       velocity.current.x *= 0.95;
       velocity.current.y *= 0.95;
-
       if (Math.abs(velocity.current.x) < 0.0001) velocity.current.x = 0;
       if (Math.abs(velocity.current.y) < 0.0001) velocity.current.y = 0;
     }
 
-    // Smooth rotation interpolation
     groupRef.current.rotation.x += (targetRotation.current.x - groupRef.current.rotation.x) * 0.08;
     groupRef.current.rotation.y += (targetRotation.current.y - groupRef.current.rotation.y) * 0.08;
   });
@@ -263,13 +263,10 @@ function CameraController({ focusedIndex, cards, dragRef }) {
     if (focusedIndex !== null && cards[focusedIndex]) {
       const p = cards[focusedIndex].position;
       const localPos = new THREE.Vector3(p[0], p[1], p[2]);
-
-      // Transform card position by DragRotate group's world rotation
       const group = dragRef?.current?.groupRef?.current;
       if (group) {
         localPos.applyEuler(group.rotation);
       }
-
       targetPos.current.set(localPos.x, localPos.y, localPos.z + 5.5);
       lookTarget.current.copy(localPos);
     } else {
@@ -310,26 +307,32 @@ function Scene({ layoutName, focusedIndex, onSelectCard, onDoubleClickCard, drag
 
   return (
     <>
-      <ambientLight intensity={0.5} />
-      <directionalLight position={[10, 10, 8]} intensity={0.8} />
-      <pointLight position={[-5, 5, 8]} intensity={0.4} color="#ff88cc" />
-      <pointLight position={[5, -3, 8]} intensity={0.3} color="#8888ff" />
+      <ambientLight intensity={0.35} />
+      <directionalLight position={[10, 12, 8]} intensity={0.7} castShadow shadow-mapSize={1024} />
+      <pointLight position={[-8, 6, 5]} intensity={0.6} color="#ff66aa" distance={30} />
+      <pointLight position={[8, -4, 6]} intensity={0.4} color="#6666ff" distance={25} />
+      <pointLight position={[0, 0, 10]} intensity={0.3} color="#ffffff" distance={20} />
 
       <CameraController focusedIndex={focusedIndex} cards={cards} dragRef={dragRef} />
 
       <DragRotate dragRef={dragRef}>
-        {photoUrls.map((url, i) => (
-          <Card3D
-            key={i}
-            url={url}
-            index={i}
-            targetPos={cards[i].position}
-            targetRot={cards[i].rotation}
-            isFocused={focusedIndex === i}
-            onSelect={onSelectCard}
-            onDoubleClick={onDoubleClickCard}
-          />
-        ))}
+        <Suspense fallback={null}>
+          {photoUrls.map((url, i) => (
+            <Card3D
+              key={i}
+              url={url}
+              index={i}
+              targetPos={cards[i].position}
+              targetRot={cards[i].rotation}
+              isFocused={focusedIndex === i}
+              onSelect={onSelectCard}
+              onDoubleClick={onDoubleClickCard}
+            />
+          ))}
+        </Suspense>
+
+        <Particles count={300} />
+        <SparkleRing />
       </DragRotate>
     </>
   );
@@ -349,7 +352,6 @@ export default function App() {
     return () => clearTimeout(timer);
   }, []);
 
-  // Scroll to cycle layouts
   useEffect(() => {
     const handleWheel = (e) => {
       if (focusedIndex !== null) return;
@@ -365,7 +367,6 @@ export default function App() {
     return () => window.removeEventListener('wheel', handleWheel);
   }, [focusedIndex]);
 
-  // Keyboard controls
   useEffect(() => {
     const handleKey = (e) => {
       if (e.key === 'Escape') setFocusedIndex(null);
@@ -382,7 +383,6 @@ export default function App() {
   }, []);
 
   const handleSelectCard = useCallback((index) => {
-    // Don't select cards while dragging
     if (dragRef.current.isDragging()) return;
     setFocusedIndex((prev) => (prev === index ? null : index));
   }, []);
@@ -396,15 +396,18 @@ export default function App() {
 
   return (
     <div className="app">
-      {/* 3D Canvas */}
       <Canvas
         camera={{ position: [0, 0, 22], fov: 50 }}
+        shadows
         gl={{
           antialias: true,
           alpha: false,
+          powerPreference: 'high-performance',
         }}
         onCreated={({ gl }) => {
           gl.setClearColor('#0a0515');
+          gl.toneMapping = THREE.ACESFilmicToneMapping;
+          gl.toneMappingExposure = 1.3;
         }}
       >
         <Scene
@@ -416,16 +419,13 @@ export default function App() {
         />
       </Canvas>
 
-      {/* UI Overlay */}
       {showUI && (
         <div className="ui-overlay">
-          {/* Title */}
           <div className="title-area">
             <h1 className="main-title">生日快乐</h1>
             <p className="sub-title">Happy Birthday to You</p>
           </div>
 
-          {/* Layout indicator */}
           <div className="layout-indicator">
             <div className="layout-badge">
               <span className="layout-label">阵型</span>
@@ -436,7 +436,6 @@ export default function App() {
             </span>
           </div>
 
-          {/* Layout navigation dots */}
           <div className="layout-dots">
             {LAYOUT_NAMES.map((name, i) => (
               <button
@@ -450,7 +449,6 @@ export default function App() {
             ))}
           </div>
 
-          {/* Controls hint */}
           <div className="controls-hint">
             <div className="hint-row">
               <kbd>鼠标拖拽</kbd>
@@ -480,7 +478,6 @@ export default function App() {
         </div>
       )}
 
-      {/* Focused card info */}
       {focusedIndex !== null && (
         <div className="focused-info">
           <span className="focused-counter">
@@ -492,7 +489,6 @@ export default function App() {
         </div>
       )}
 
-      {/* Hidden UI hint when hidden */}
       {!showUI && (
         <div className="show-hint">
           按 <kbd>H</kbd> 显示界面
