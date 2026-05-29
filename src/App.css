@@ -8,6 +8,7 @@
 
 .app canvas {
   cursor: grab;
+  touch-action: none;
 }
 
 .app canvas:active {

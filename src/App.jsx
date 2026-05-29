@@ -254,9 +254,10 @@ function DragRotate({ dragRef, children }) {
 
       lastMouse.current = { x: e.clientX, y: e.clientY };
 
-      targetRotation.current.y += dx * 0.005;
+      targetRotation.current.y += dx * 0.004;
       targetRotation.current.x += dy * 0.003;
-      targetRotation.current.x = Math.max(-0.6, Math.min(0.6, targetRotation.current.x));
+      targetRotation.current.x = Math.max(-0.4, Math.min(0.4, targetRotation.current.x));
+      targetRotation.current.y = Math.max(-0.8, Math.min(0.8, targetRotation.current.y));
 
       velocity.current = { x: dy * 0.003, y: dx * 0.005 };
     };
@@ -291,7 +292,8 @@ function DragRotate({ dragRef, children }) {
     if (!isDragging.current) {
       targetRotation.current.y += velocity.current.y;
       targetRotation.current.x += velocity.current.x;
-      targetRotation.current.x = Math.max(-0.6, Math.min(0.6, targetRotation.current.x));
+      targetRotation.current.x = Math.max(-0.4, Math.min(0.4, targetRotation.current.x));
+      targetRotation.current.y = Math.max(-0.8, Math.min(0.8, targetRotation.current.y));
 
       // Decay velocity
       velocity.current.x *= 0.95;
