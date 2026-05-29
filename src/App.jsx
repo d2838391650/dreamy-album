@@ -318,22 +318,18 @@ function Scene({ layoutName, focusedIndex, onSelectCard, onDoubleClickCard, drag
       <CameraController focusedIndex={focusedIndex} cards={cards} dragRef={dragRef} />
 
       <DragRotate dragRef={dragRef}>
-        <Suspense fallback={null}>
-          {photoUrls.map((url, i) => (
-            <Card3D
-              key={i}
-              url={url}
-              index={i}
-              targetPos={cards[i].position}
-              targetRot={cards[i].rotation}
-              isFocused={focusedIndex === i}
-              onSelect={onSelectCard}
-              onDoubleClick={onDoubleClickCard}
-            />
-          ))}
-        </Suspense>
-
-        <Particles count={150} />
+        {photoUrls.map((url, i) => (
+          <Card3D
+            key={i}
+            url={url}
+            index={i}
+            targetPos={cards[i].position}
+            targetRot={cards[i].rotation}
+            isFocused={focusedIndex === i}
+            onSelect={onSelectCard}
+            onDoubleClick={onDoubleClickCard}
+          />
+        ))}
       </DragRotate>
     </>
   );
@@ -403,16 +399,12 @@ export default function App() {
       {/* 3D Canvas */}
       <Canvas
         camera={{ position: [0, 0, 22], fov: 50 }}
-        shadows
         gl={{
           antialias: true,
           alpha: false,
-          powerPreference: 'high-performance',
         }}
         onCreated={({ gl }) => {
           gl.setClearColor('#0a0515');
-          gl.toneMapping = THREE.ACESFilmicToneMapping;
-          gl.toneMappingExposure = 1.3;
         }}
       >
         <Scene
