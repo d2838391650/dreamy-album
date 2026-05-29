@@ -16,29 +16,9 @@ const photoUrls = Array.from(
 // ─── 3D Card Component ──────────────────────────────────────────────────────
 function Card3D({ url, index, targetPos, targetRot, isFocused, onSelect, onDoubleClick }) {
   const groupRef = useRef();
-  const meshRef = useRef();
+  const glowRef = useRef();
   const [hovered, setHovered] = useState(false);
   const texture = useTexture(url);
-
-  const material = useMemo(() => {
-    return new THREE.MeshStandardMaterial({
-      map: texture,
-      roughness: 0.25,
-      metalness: 0.05,
-      polygonOffset: true,
-      polygonOffsetFactor: -1,
-      polygonOffsetUnits: -1,
-    });
-  }, [texture]);
-
-  const glowMaterial = useMemo(() => {
-    return new THREE.MeshBasicMaterial({
-      color: '#ff88cc',
-      transparent: true,
-      opacity: 0.0,
-      depthWrite: false,
-    });
-  }, []);
 
   // Animate position and rotation with GSAP
   useEffect(() => {
@@ -68,11 +48,13 @@ function Card3D({ url, index, targetPos, targetRot, isFocused, onSelect, onDoubl
       delta * 5
     );
     // Glow on hover
-    glowMaterial.opacity = THREE.MathUtils.lerp(
-      glowMaterial.opacity,
-      hovered ? 0.25 : 0,
-      delta * 5
-    );
+    if (glowRef.current) {
+      glowRef.current.opacity = THREE.MathUtils.lerp(
+        glowRef.current.opacity,
+        hovered ? 0.25 : 0,
+        delta * 5
+      );
+    }
     // Subtle floating when hovered
     if (hovered && !isFocused) {
       groupRef.current.position.y += Math.sin(Date.now() * 0.003) * 0.001;
@@ -103,14 +85,27 @@ function Card3D({ url, index, targetPos, targetRot, isFocused, onSelect, onDoubl
       }}
     >
       {/* Card photo */}
-      <mesh ref={meshRef} renderOrder={2}>
+      <mesh renderOrder={2}>
         <planeGeometry args={[2.4, 3.2]} />
-        <primitive object={material} attach="material" />
+        <meshStandardMaterial
+          map={texture}
+          roughness={0.25}
+          metalness={0.05}
+          polygonOffset
+          polygonOffsetFactor={-1}
+          polygonOffsetUnits={-1}
+        />
       </mesh>
       {/* Glow border */}
       <mesh position={[0, 0, -0.2]} renderOrder={1}>
         <planeGeometry args={[2.6, 3.4]} />
-        <primitive object={glowMaterial} attach="material" />
+        <meshBasicMaterial
+          ref={glowRef}
+          color="#ff88cc"
+          transparent
+          opacity={0}
+          depthWrite={false}
+        />
       </mesh>
       {/* Photo frame shadow */}
       <mesh position={[0.06, -0.06, -0.4]} renderOrder={0}>
