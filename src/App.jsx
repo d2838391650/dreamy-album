@@ -25,7 +25,9 @@ function Card3D({ url, index, targetPos, targetRot, isFocused, onSelect, onDoubl
       map: texture,
       roughness: 0.25,
       metalness: 0.05,
-      side: THREE.DoubleSide,
+      polygonOffset: true,
+      polygonOffsetFactor: -1,
+      polygonOffsetUnits: -1,
     });
   }, [texture]);
 
@@ -34,7 +36,6 @@ function Card3D({ url, index, targetPos, targetRot, isFocused, onSelect, onDoubl
       color: '#ff88cc',
       transparent: true,
       opacity: 0.0,
-      side: THREE.DoubleSide,
     });
   }, []);
 
@@ -106,14 +107,14 @@ function Card3D({ url, index, targetPos, targetRot, isFocused, onSelect, onDoubl
         <primitive object={material} attach="material" />
       </mesh>
       {/* Glow border */}
-      <mesh position={[0, 0, -0.03]}>
+      <mesh position={[0, 0, -0.15]}>
         <planeGeometry args={[2.6, 3.4]} />
         <primitive object={glowMaterial} attach="material" />
       </mesh>
       {/* Photo frame shadow */}
-      <mesh position={[0.05, -0.05, -0.05]}>
+      <mesh position={[0.06, -0.06, -0.3]}>
         <planeGeometry args={[2.4, 3.2]} />
-        <meshBasicMaterial color="#000000" transparent opacity={0.3} />
+        <meshBasicMaterial color="#000000" transparent opacity={0.25} />
       </mesh>
     </group>
   );
@@ -393,7 +394,7 @@ function Scene({ layoutName, focusedIndex, onSelectCard, onDoubleClickCard, drag
         <SparkleRing />
       </DragRotate>
 
-      <fog attach="fog" args={['#0a0515', 18, 50]} />
+      <fog attach="fog" args={['#0a0515', 25, 60]} />
     </>
   );
 }
