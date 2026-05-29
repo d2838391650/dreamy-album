@@ -16,7 +16,6 @@ const photoUrls = Array.from(
 // ─── 3D Card Component ──────────────────────────────────────────────────────
 function Card3D({ url, index, targetPos, targetRot, isFocused, onSelect, onDoubleClick }) {
   const groupRef = useRef();
-  const glowRef = useRef();
   const [hovered, setHovered] = useState(false);
   const texture = useTexture(url);
 
@@ -42,20 +41,8 @@ function Card3D({ url, index, targetPos, targetRot, isFocused, onSelect, onDoubl
   // Hover and focus animation
   useFrame((_, delta) => {
     if (!groupRef.current) return;
-    const targetScale = isFocused ? 1.5 : hovered ? 1.08 : 1.0;
-    groupRef.current.scale.lerp(
-      new THREE.Vector3(targetScale, targetScale, targetScale),
-      delta * 5
-    );
-    // Glow on hover
-    if (glowRef.current) {
-      glowRef.current.opacity = THREE.MathUtils.lerp(
-        glowRef.current.opacity,
-        hovered ? 0.25 : 0,
-        delta * 5
-      );
-    }
-    // Subtle floating when hovered
+    const s = isFocused ? 1.5 : hovered ? 1.08 : 1.0;
+    groupRef.current.scale.lerp(new THREE.Vector3(s, s, s), delta * 5);
     if (hovered && !isFocused) {
       groupRef.current.position.y += Math.sin(Date.now() * 0.003) * 0.001;
     }
@@ -66,51 +53,14 @@ function Card3D({ url, index, targetPos, targetRot, isFocused, onSelect, onDoubl
       ref={groupRef}
       position={targetPos}
       rotation={targetRot}
-      onClick={(e) => {
-        e.stopPropagation();
-        onSelect(index);
-      }}
-      onDoubleClick={(e) => {
-        e.stopPropagation();
-        onDoubleClick(index);
-      }}
-      onPointerEnter={(e) => {
-        e.stopPropagation();
-        setHovered(true);
-        document.body.style.cursor = 'pointer';
-      }}
-      onPointerLeave={() => {
-        setHovered(false);
-        document.body.style.cursor = 'default';
-      }}
+      onClick={(e) => { e.stopPropagation(); onSelect(index); }}
+      onDoubleClick={(e) => { e.stopPropagation(); onDoubleClick(index); }}
+      onPointerEnter={(e) => { e.stopPropagation(); setHovered(true); document.body.style.cursor = 'pointer'; }}
+      onPointerLeave={() => { setHovered(false); document.body.style.cursor = 'default'; }}
     >
-      {/* Card photo */}
-      <mesh renderOrder={2}>
+      <mesh>
         <planeGeometry args={[2.4, 3.2]} />
-        <meshStandardMaterial
-          map={texture}
-          roughness={0.25}
-          metalness={0.05}
-          polygonOffset
-          polygonOffsetFactor={-1}
-          polygonOffsetUnits={-1}
-        />
-      </mesh>
-      {/* Glow border */}
-      <mesh position={[0, 0, -0.2]} renderOrder={1}>
-        <planeGeometry args={[2.6, 3.4]} />
-        <meshBasicMaterial
-          ref={glowRef}
-          color="#ff88cc"
-          transparent
-          opacity={0}
-          depthWrite={false}
-        />
-      </mesh>
-      {/* Photo frame shadow */}
-      <mesh position={[0.06, -0.06, -0.4]} renderOrder={0}>
-        <planeGeometry args={[2.4, 3.2]} />
-        <meshBasicMaterial color="#000000" transparent opacity={0.2} depthWrite={false} />
+        <meshStandardMaterial map={texture} roughness={0.3} metalness={0.05} />
       </mesh>
     </group>
   );
@@ -360,11 +310,10 @@ function Scene({ layoutName, focusedIndex, onSelectCard, onDoubleClickCard, drag
 
   return (
     <>
-      <ambientLight intensity={0.35} />
-      <directionalLight position={[10, 12, 8]} intensity={0.7} castShadow shadow-mapSize={1024} />
-      <pointLight position={[-8, 6, 5]} intensity={0.6} color="#ff66aa" distance={30} />
-      <pointLight position={[8, -4, 6]} intensity={0.4} color="#6666ff" distance={25} />
-      <pointLight position={[0, 0, 10]} intensity={0.3} color="#ffffff" distance={20} />
+      <ambientLight intensity={0.5} />
+      <directionalLight position={[10, 10, 8]} intensity={0.8} />
+      <pointLight position={[-5, 5, 8]} intensity={0.4} color="#ff88cc" />
+      <pointLight position={[5, -3, 8]} intensity={0.3} color="#8888ff" />
 
       <CameraController focusedIndex={focusedIndex} cards={cards} dragRef={dragRef} />
 
@@ -384,11 +333,8 @@ function Scene({ layoutName, focusedIndex, onSelectCard, onDoubleClickCard, drag
           ))}
         </Suspense>
 
-        <Particles count={300} />
-        <SparkleRing />
+        <Particles count={150} />
       </DragRotate>
-
-      {/* No fog — prevents edge flickering when rotating */}
     </>
   );
 }
