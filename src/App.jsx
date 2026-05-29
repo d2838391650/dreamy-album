@@ -36,6 +36,7 @@ function Card3D({ url, index, targetPos, targetRot, isFocused, onSelect, onDoubl
       color: '#ff88cc',
       transparent: true,
       opacity: 0.0,
+      depthWrite: false,
     });
   }, []);
 
@@ -102,19 +103,19 @@ function Card3D({ url, index, targetPos, targetRot, isFocused, onSelect, onDoubl
       }}
     >
       {/* Card photo */}
-      <mesh ref={meshRef} castShadow receiveShadow>
+      <mesh ref={meshRef} renderOrder={2}>
         <planeGeometry args={[2.4, 3.2]} />
         <primitive object={material} attach="material" />
       </mesh>
       {/* Glow border */}
-      <mesh position={[0, 0, -0.15]}>
+      <mesh position={[0, 0, -0.2]} renderOrder={1}>
         <planeGeometry args={[2.6, 3.4]} />
         <primitive object={glowMaterial} attach="material" />
       </mesh>
       {/* Photo frame shadow */}
-      <mesh position={[0.06, -0.06, -0.3]}>
+      <mesh position={[0.06, -0.06, -0.4]} renderOrder={0}>
         <planeGeometry args={[2.4, 3.2]} />
-        <meshBasicMaterial color="#000000" transparent opacity={0.25} />
+        <meshBasicMaterial color="#000000" transparent opacity={0.2} depthWrite={false} />
       </mesh>
     </group>
   );
@@ -254,10 +255,8 @@ function DragRotate({ dragRef, children }) {
 
       lastMouse.current = { x: e.clientX, y: e.clientY };
 
-      targetRotation.current.y += dx * 0.004;
+      targetRotation.current.y += dx * 0.005;
       targetRotation.current.x += dy * 0.003;
-      targetRotation.current.x = Math.max(-0.4, Math.min(0.4, targetRotation.current.x));
-      targetRotation.current.y = Math.max(-0.8, Math.min(0.8, targetRotation.current.y));
 
       velocity.current = { x: dy * 0.003, y: dx * 0.005 };
     };
@@ -292,8 +291,6 @@ function DragRotate({ dragRef, children }) {
     if (!isDragging.current) {
       targetRotation.current.y += velocity.current.y;
       targetRotation.current.x += velocity.current.x;
-      targetRotation.current.x = Math.max(-0.4, Math.min(0.4, targetRotation.current.x));
-      targetRotation.current.y = Math.max(-0.8, Math.min(0.8, targetRotation.current.y));
 
       // Decay velocity
       velocity.current.x *= 0.95;
@@ -396,7 +393,7 @@ function Scene({ layoutName, focusedIndex, onSelectCard, onDoubleClickCard, drag
         <SparkleRing />
       </DragRotate>
 
-      <fog attach="fog" args={['#0a0515', 25, 60]} />
+      {/* No fog — prevents edge flickering when rotating */}
     </>
   );
 }
