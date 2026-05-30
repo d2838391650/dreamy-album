@@ -3,7 +3,156 @@
   height: 100vh;
   position: relative;
   overflow: hidden;
-  background: #0a0515;
+  background: linear-gradient(135deg, #1a0a1e 0%, #2d1b36 25%, #1a0a2e 50%, #0d0d1a 75%, #1a0a1e 100%);
+}
+
+/* ─── Floating Hearts Background ────────────────────────────────────────── */
+.app::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 20% 50%, rgba(255, 100, 150, 0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, rgba(200, 100, 255, 0.06) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 80%, rgba(255, 150, 200, 0.05) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.app canvas {
+  cursor: grab;
+  touch-action: none;
+  position: relative;
+  z-index: 1;
+}
+
+.app canvas:active {
+  cursor: grabbing;
+}
+
+/* ─── Floating Hearts Animation ─────────────────────────────────────────── */
+@keyframes floatHeart1 {
+  0%, 100% { transform: translate(0, 0) rotate(45deg) scale(1); opacity: 0.15; }
+  25% { transform: translate(10px, -20px) rotate(50deg) scale(1.1); opacity: 0.25; }
+  50% { transform: translate(-5px, -40px) rotate(40deg) scale(0.9); opacity: 0.2; }
+  75% { transform: translate(15px, -20px) rotate(55deg) scale(1.05); opacity: 0.18; }
+}
+
+@keyframes floatHeart2 {
+  0%, 100% { transform: translate(0, 0) rotate(-45deg) scale(0.8); opacity: 0.1; }
+  33% { transform: translate(-15px, -30px) rotate(-40deg) scale(1); opacity: 0.2; }
+  66% { transform: translate(10px, -15px) rotate(-50deg) scale(0.9); opacity: 0.15; }
+}
+
+@keyframes floatHeart3 {
+  0%, 100% { transform: translate(0, 0) rotate(45deg) scale(0.6); opacity: 0.12; }
+  50% { transform: translate(20px, -50px) rotate(50deg) scale(0.8); opacity: 0.22; }
+}
+
+/* ─── Floating Hearts Background ────────────────────────────────────────── */
+.hearts-bg {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.floating-heart {
+  position: absolute;
+  color: #ff6b9d;
+  animation: floatHeart1 8s ease-in-out infinite;
+  filter: blur(0.5px);
+  text-shadow: 0 0 15px rgba(255, 107, 157, 0.7), 0 0 30px rgba(255, 107, 157, 0.3);
+}
+
+.floating-heart:nth-child(odd) {
+  animation-name: floatHeart2;
+  color: #c77dff;
+  text-shadow: 0 0 15px rgba(199, 125, 255, 0.7), 0 0 30px rgba(199, 125, 255, 0.3);
+}
+
+.floating-heart:nth-child(3n) {
+  animation-name: floatHeart3;
+  color: #ff9ed2;
+  text-shadow: 0 0 15px rgba(255, 158, 210, 0.7), 0 0 30px rgba(255, 158, 210, 0.3);
+}
+
+.floating-heart:nth-child(4n) {
+  color: #ff6b9d;
+  filter: blur(1px);
+}
+
+/* ─── Center Decor Image ──────────────────────────────────────────────── */
+@keyframes decorFloat {
+  0%, 100% { opacity: 0.15; transform: translate(-50%, -50%) translateY(0); }
+  50% { opacity: 0.25; transform: translate(-50%, -50%) translateY(-10px); }
+}
+
+.center-decor {
+  position: absolute;
+  top: 38%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 2;
+  animation: decorFloat 6s ease-in-out infinite;
+  width: 320px;
+}
+
+.center-decor img {
+  width: 100%;
+  height: auto;
+  border-radius: 20px;
+  filter: blur(0.5px);
+}
+
+@media (max-width: 768px) {
+  .center-decor {
+    width: 200px;
+  }
+}
+
+/* ─── Floating Stars and Elements ──────────────────────────────────────── */
+@keyframes floatStar {
+  0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.3; }
+  50% { transform: scale(1.3) rotate(180deg); opacity: 0.6; }
+}
+
+@keyframes sparkle {
+  0%, 100% { opacity: 0.2; transform: scale(0.8); }
+  50% { opacity: 0.5; transform: scale(1.2); }
+}
+
+.floating-star {
+  position: absolute;
+  pointer-events: none;
+  animation: floatStar 5s ease-in-out infinite;
+  color: #ffeb3b;
+  text-shadow: 0 0 10px rgba(255, 235, 59, 0.6);
+  font-size: 16px;
+}
+
+.floating-sparkle {
+  position: absolute;
+  pointer-events: none;
+  animation: sparkle 3s ease-in-out infinite;
+  color: #fff;
+  font-size: 12px;
+}
+
+/* ─── Cute Pattern Overlay ─────────────────────────────────────────────── */
+.cute-pattern {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.04;
+  background-image:
+    radial-gradient(circle at 20% 20%, #ff6b9d 1.5px, transparent 1.5px),
+    radial-gradient(circle at 80% 80%, #c77dff 1.5px, transparent 1.5px),
+    radial-gradient(circle at 50% 50%, #ff9ed2 1.5px, transparent 1.5px);
+  background-size: 80px 80px;
 }
 
 .app canvas {

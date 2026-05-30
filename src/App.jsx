@@ -373,6 +373,25 @@ export default function App() {
 
   return (
     <div className="app">
+      {/* Floating Hearts Background */}
+      <div className="hearts-bg">
+        {Array.from({ length: 25 }).map((_, i) => (
+          <div key={i} className="floating-heart" style={{
+            left: `${5 + Math.random() * 90}%`,
+            top: `${5 + Math.random() * 90}%`,
+            animationDelay: `${Math.random() * 8}s`,
+            animationDuration: `${8 + Math.random() * 12}s`,
+            fontSize: `${16 + Math.random() * 32}px`,
+            opacity: 0.15 + Math.random() * 0.25,
+          }}>♥</div>
+        ))}
+        {/* Center Decor Image */}
+        <div className="center-decor">
+          <img src={`${BASE}cute-characters.png`} alt="" />
+        </div>
+      </div>
+      <div className="cute-pattern" />
+
       <audio ref={audioRef} src={`${BASE}birthday.m4a`} loop />
 
       {showMusicPopup && (
@@ -389,8 +408,8 @@ export default function App() {
         </div>
       )}
 
-      <Canvas camera={{ position: [0, 0, 22], fov: 50 }} gl={{ antialias: true, alpha: false }}
-        onCreated={({ gl }) => { gl.setClearColor('#0a0515'); }}>
+      <Canvas camera={{ position: [0, 0, 22], fov: 50 }} gl={{ antialias: true, alpha: true }}
+        onCreated={({ gl }) => { gl.setClearColor(0x000000, 0); }}>
         <Scene layoutName={layoutName} focusedIndex={focusedIndex} onSelectCard={handleSelectCard} onDoubleClickCard={handleDoubleClickCard} dragRef={dragRef} transitionKey={transitionKey} />
       </Canvas>
 
