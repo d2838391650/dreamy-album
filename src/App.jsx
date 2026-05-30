@@ -293,6 +293,8 @@ export default function App() {
   const [showUI, setShowUI] = useState(true);
   const [loaded, setLoaded] = useState(false);
   const [transitionKey, setTransitionKey] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const audioRef = useRef(null);
   const dragRef = useRef({ isDragging: () => false });
   const layoutName = LAYOUT_NAMES[layoutIndex];
 
@@ -305,6 +307,43 @@ export default function App() {
     const timer = setTimeout(() => setLoaded(true), 500);
     return () => clearTimeout(timer);
   }, []);
+
+  // Auto-play music on first user interaction
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const playOnInteraction = () => {
+      audio.play().then(() => {
+        setIsPlaying(true);
+      }).catch(() => {});
+      // Remove listeners after first play
+      window.removeEventListener('click', playOnInteraction);
+      window.removeEventListener('touchstart', playOnInteraction);
+      window.removeEventListener('keydown', playOnInteraction);
+    };
+
+    window.addEventListener('click', playOnInteraction);
+    window.addEventListener('touchstart', playOnInteraction);
+    window.addEventListener('keydown', playOnInteraction);
+
+    return () => {
+      window.removeEventListener('click', playOnInteraction);
+      window.removeEventListener('touchstart', playOnInteraction);
+      window.removeEventListener('keydown', playOnInteraction);
+    };
+  }, []);
+
+  const toggleMusic = useCallback(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    if (isPlaying) {
+      audio.pause();
+      setIsPlaying(false);
+    } else {
+      audio.play().then(() => setIsPlaying(true)).catch(() => {});
+    }
+  }, [isPlaying]);
 
   useEffect(() => {
     const handleWheel = (e) => {
@@ -349,6 +388,8 @@ export default function App() {
 
   return (
     <div className="app">
+      <audio ref={audioRef} src={`${BASE}birthday.m4a`} loop />
+
       <Canvas camera={{ position: [0, 0, 22], fov: 50 }} gl={{ antialias: true, alpha: false }}
         onCreated={({ gl }) => { gl.setClearColor('#0a0515'); }}>
         <Scene layoutName={layoutName} focusedIndex={focusedIndex} onSelectCard={handleSelectCard} onDoubleClickCard={handleDoubleClickCard} dragRef={dragRef} transitionKey={transitionKey} />
@@ -367,6 +408,11 @@ export default function App() {
             </div>
             <span className="layout-counter">{layoutIndex+1} / {LAYOUT_NAMES.length}</span>
           </div>
+
+          <button className="music-btn" onClick={toggleMusic} title={isPlaying ? '暂停音乐' : '播放音乐'}>
+            {isPlaying ? '♪' : '♪'}
+            <span className="music-status">{isPlaying ? '播放中' : '已暂停'}</span>
+          </button>
           <div className="layout-dots">
             {LAYOUT_NAMES.map((name, i) => (
               <button key={name} className={`dot ${i===layoutIndex?'active':''}`} onClick={() => switchLayout(i)} title={name}>
