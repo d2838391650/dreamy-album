@@ -308,30 +308,28 @@ export default function App() {
     return () => clearTimeout(timer);
   }, []);
 
-  // Auto-play music on first user interaction
+  // Auto-play music immediately and on first interaction
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
 
-    const playOnInteraction = () => {
-      audio.play().then(() => {
-        setIsPlaying(true);
-      }).catch(() => {});
-      // Remove listeners after first play
-      window.removeEventListener('click', playOnInteraction);
-      window.removeEventListener('touchstart', playOnInteraction);
-      window.removeEventListener('keydown', playOnInteraction);
-    };
-
-    window.addEventListener('click', playOnInteraction);
-    window.addEventListener('touchstart', playOnInteraction);
-    window.addEventListener('keydown', playOnInteraction);
-
-    return () => {
-      window.removeEventListener('click', playOnInteraction);
-      window.removeEventListener('touchstart', playOnInteraction);
-      window.removeEventListener('keydown', playOnInteraction);
-    };
+    // Try to play immediately
+    audio.play().then(() => {
+      setIsPlaying(true);
+    }).catch(() => {
+      // If autoplay blocked, try on first interaction
+      const playOnInteraction = () => {
+        audio.play().then(() => {
+          setIsPlaying(true);
+        }).catch(() => {});
+        window.removeEventListener('click', playOnInteraction);
+        window.removeEventListener('touchstart', playOnInteraction);
+        window.removeEventListener('keydown', playOnInteraction);
+      };
+      window.addEventListener('click', playOnInteraction);
+      window.addEventListener('touchstart', playOnInteraction);
+      window.addEventListener('keydown', playOnInteraction);
+    });
   }, []);
 
   const toggleMusic = useCallback(() => {
