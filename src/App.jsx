@@ -294,6 +294,7 @@ export default function App() {
   const [loaded, setLoaded] = useState(false);
   const [transitionKey, setTransitionKey] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [showMusicPopup, setShowMusicPopup] = useState(true);
   const audioRef = useRef(null);
   const dragRef = useRef({ isDragging: () => false });
   const layoutName = LAYOUT_NAMES[layoutIndex];
@@ -308,30 +309,6 @@ export default function App() {
     return () => clearTimeout(timer);
   }, []);
 
-  // Auto-play music immediately and on first interaction
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-
-    // Try to play immediately
-    audio.play().then(() => {
-      setIsPlaying(true);
-    }).catch(() => {
-      // If autoplay blocked, try on first interaction
-      const playOnInteraction = () => {
-        audio.play().then(() => {
-          setIsPlaying(true);
-        }).catch(() => {});
-        window.removeEventListener('click', playOnInteraction);
-        window.removeEventListener('touchstart', playOnInteraction);
-        window.removeEventListener('keydown', playOnInteraction);
-      };
-      window.addEventListener('click', playOnInteraction);
-      window.addEventListener('touchstart', playOnInteraction);
-      window.addEventListener('keydown', playOnInteraction);
-    });
-  }, []);
-
   const toggleMusic = useCallback(() => {
     const audio = audioRef.current;
     if (!audio) return;
@@ -342,6 +319,16 @@ export default function App() {
       audio.play().then(() => setIsPlaying(true)).catch(() => {});
     }
   }, [isPlaying]);
+
+  const handleMusicPopup = useCallback((play) => {
+    setShowMusicPopup(false);
+    if (play) {
+      const audio = audioRef.current;
+      if (audio) {
+        audio.play().then(() => setIsPlaying(true)).catch(() => {});
+      }
+    }
+  }, []);
 
   useEffect(() => {
     const handleWheel = (e) => {
@@ -387,6 +374,20 @@ export default function App() {
   return (
     <div className="app">
       <audio ref={audioRef} src={`${BASE}birthday.m4a`} loop />
+
+      {showMusicPopup && (
+        <div className="music-popup-overlay">
+          <div className="music-popup">
+            <div className="music-popup-icon">🎵</div>
+            <h2 className="music-popup-title">生日快乐</h2>
+            <p className="music-popup-desc">是否播放生日快乐歌？</p>
+            <div className="music-popup-buttons">
+              <button className="music-popup-btn play" onClick={() => handleMusicPopup(true)}>播放音乐</button>
+              <button className="music-popup-btn skip" onClick={() => handleMusicPopup(false)}>暂时不用</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <Canvas camera={{ position: [0, 0, 22], fov: 50 }} gl={{ antialias: true, alpha: false }}
         onCreated={({ gl }) => { gl.setClearColor('#0a0515'); }}>
